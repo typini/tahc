@@ -1,3 +1,4 @@
+import KeyboardSpacer from 'react-native-keyboard-spacer';
 import React, { Component } from 'react';
 import { StyleSheet, Text, TextInput, Alert, Button, View, ImageBackground, TouchableOpacity } from 'react-native';
 
