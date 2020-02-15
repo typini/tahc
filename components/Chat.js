@@ -1,7 +1,9 @@
 import KeyboardSpacer from 'react-native-keyboard-spacer';
 import React, { Component } from "react";
-import { StyleSheet, View, Text, Platform } from "react-native";
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
+import { StyleSheet, View, Text, Platform, AsyncStorage } from "react-native";
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
+//import { NetInfoProvider } from 'react-native-netinfo';
+import NetInfo from "@react-native-community/netinfo";
 
 const firebase = require('firebase');
 require('firebase/firestore');
@@ -10,6 +12,7 @@ export default class Chat extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      isConnected: false,
       messages: [],
       user: {
         _id: '',
@@ -38,44 +41,37 @@ export default class Chat extends Component {
   }
 
   componentDidMount(){
-    this.authUnsubscribe = firebase.auth().onAuthStateChanged(async user => {
-      if (!user) {
-        await firebase.auth().signInAnonymously();
+    NetInfo.fetch().then(state => {
+      if (state.isConnected){
+        this.setState({
+          isConnected: true
+        });
       }
-
-      if (this.props.navigation.state.params.name){
-        this.setUser(user.uid, this.props.navigation.state.params.name);
-      } else {
-        this.setUser(user.uid);
-      }
-
-      this.setState({
-        uid: user.uid,
-        loggedInText: 'Hello There'
-      });
-
-      this.unsubscribe = this.referenceMessages.onSnapshot(this.onCollectionUpdate);
-    });
-
-    this.setState({
-      messages: [
-        {
-          _id: 1,
-          text: 'Hello developer',
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'React Native',
-            avatar: 'https://placeimg.com/140/140/any'
+      if (state.isConnected) {
+        this.authUnsubscribe = firebase.auth().onAuthStateChanged(async user => {
+          if (!user) {
+            await firebase.auth().signInAnonymously();
           }
-        },
-        {
-          _id: 2,
-          text: `Welcome to MOOR TAHC ${this.props.navigation.state.params.name}!`,
-          createdAt: new Date(),
-          system: true
-        }
-      ]
+
+          if (this.props.navigation.state.params.name){
+            this.setUser(user.uid, this.props.navigation.state.params.name);
+          } else {
+            this.setUser(user.uid);
+          }
+
+          this.setState({
+            uid: user.uid,
+            loggedInText: 'Hello There'
+          });
+
+          this.unsubscribe = this.referenceMessages.onSnapshot(this.onCollectionUpdate);
+        });
+      } else {
+        this.setState({
+          isConnected: false
+        });
+        this.getMessages();
+      }
     });
   }
 
@@ -104,12 +100,41 @@ export default class Chat extends Component {
     });
   }
 
+  getMessages = async () => {
+    let messages = [];
+    try {
+      messages = await AsyncStorage.getItem('messages') || [];
+      this.setState({
+        messages: JSON.parse(messages)
+      });
+    } catch (err){
+      console.log(err.message);
+    }
+  };
+
+  saveMessages = async () => {
+    try {
+      await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
+    } catch (err){
+      console.log(err.message);
+    }
+  };
+
+  deleteMessages = async () => {
+    try {
+      await AsyncStorage.removeItem('messages');
+    } catch (err){
+      console.log(err.message);
+    }
+  };
+
   onSend(messages = []) {
     this.setState(previousState => ({
       messages: GiftedChat.append(previousState.messages, messages)
     }),
     () => {
       this.addMessage();
+      this.saveMessages();
     });
   }
 
@@ -145,6 +170,16 @@ export default class Chat extends Component {
     );
   }
 
+  renderInputToolbar(props){
+    if (this.state.isConnected){
+      return(
+        <InputToolbar
+          {...props}
+        />
+      );
+    }
+  }
+
   //Sets the title in the Navigation Bar up top
   static navigationOptions = ({ navigation }) => {
     return {
@@ -159,6 +194,7 @@ export default class Chat extends Component {
         <Text>{this.state.loggedInText}</Text>
         <GiftedChat
           renderBubble={this.renderBubble.bind(this)}
+          renderInputToolbar={this.renderInputToolbar.bind(this)}
           messages={this.state.messages}
           onSend={messages => this.onSend(messages)}
           user={this.state.user}
