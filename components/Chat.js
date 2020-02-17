@@ -4,6 +4,9 @@ import { StyleSheet, View, Text, Platform, AsyncStorage } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 //import { NetInfoProvider } from 'react-native-netinfo';
 import NetInfo from "@react-native-community/netinfo";
+import MapView from "react-native-maps";
+
+import CustomActions from './CustomActions';
 
 const firebase = require('firebase');
 require('firebase/firestore');
@@ -61,10 +64,10 @@ export default class Chat extends Component {
 
           this.setState({
             uid: user.uid,
-            loggedInText: 'Hello There'
+            loggedInText: 'You are online!'
           });
 
-          this.unsubscribe = this.referenceMessages.onSnapshot(this.onCollectionUpdate);
+          this.unsubscribe = this.referenceMessages.orderBy('createdAt', 'desc').onSnapshot(this.onCollectionUpdate);
         });
       } else {
         this.setState({
@@ -96,7 +99,9 @@ export default class Chat extends Component {
       text: this.state.messages[0].text || '',
       createdAt: this.state.messages[0].createdAt,
       user: this.state.user,
-      uid: this.state.uid
+      uid: this.state.uid,
+      image: this.state.messages[0].image || '',
+      location: this.state.messages[0].location || null
     });
   }
 
@@ -108,7 +113,7 @@ export default class Chat extends Component {
         messages: JSON.parse(messages)
       });
     } catch (err){
-      console.log(err.message);
+      console.error(err.message);
     }
   };
 
@@ -116,7 +121,7 @@ export default class Chat extends Component {
     try {
       await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
     } catch (err){
-      console.log(err.message);
+      console.error(err.message);
     }
   };
 
@@ -124,7 +129,7 @@ export default class Chat extends Component {
     try {
       await AsyncStorage.removeItem('messages');
     } catch (err){
-      console.log(err.message);
+      console.error(err.message);
     }
   };
 
@@ -146,7 +151,9 @@ export default class Chat extends Component {
         _id: data._id,
         text: data.text,
         createdAt: data.createdAt.toDate(),
-        user: data.user
+        user: data.user,
+        image: data.image || '',
+        location: data.location || null
       });
     });
     this.setState({
@@ -180,6 +187,33 @@ export default class Chat extends Component {
     }
   }
 
+  renderCustomActions = (props) => {
+    return <CustomActions {...props} />;
+  };
+
+  renderCustomView (props) {
+    const { currentMessage } = props;
+    if (currentMessage.location) {
+      return (
+        <MapView
+          style={{
+            width: 300,
+            height: 200,
+            borderRadius: 13,
+            margin: 5
+          }}
+          region={{
+            latitude: currentMessage.location.latitude,
+            longitude: currentMessage.location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421
+          }}
+        />
+      );
+    }
+    return null;
+  }
+
   //Sets the title in the Navigation Bar up top
   static navigationOptions = ({ navigation }) => {
     return {
@@ -195,6 +229,8 @@ export default class Chat extends Component {
         <GiftedChat
           renderBubble={this.renderBubble.bind(this)}
           renderInputToolbar={this.renderInputToolbar.bind(this)}
+          renderActions={this.renderCustomActions.bind(this)}
+          renderCustomView={this.renderCustomView}
           messages={this.state.messages}
           onSend={messages => this.onSend(messages)}
           user={this.state.user}
