@@ -2,15 +2,17 @@ import KeyboardSpacer from 'react-native-keyboard-spacer';
 import React, { Component } from "react";
 import { StyleSheet, View, Text, Platform, AsyncStorage } from "react-native";
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
+//The following line was deprecated.  Use import NetInfo from "@react-native-community/netinfo" instead
 //import { NetInfoProvider } from 'react-native-netinfo';
 import NetInfo from "@react-native-community/netinfo";
 import MapView from "react-native-maps";
-
 import CustomActions from './CustomActions';
 
+//Required syntax for incorporating Google's Firebase Database
 const firebase = require('firebase');
 require('firebase/firestore');
 
+//Screen2 (Chat.js)  export goes here
 export default class Chat extends Component {
   constructor(props) {
     super(props);
@@ -51,24 +53,28 @@ export default class Chat extends Component {
         });
       }
       if (state.isConnected) {
-        this.authUnsubscribe = firebase.auth().onAuthStateChanged(async user => {
-          if (!user) {
-            await firebase.auth().signInAnonymously();
-          }
+        try {
+          this.authUnsubscribe = firebase.auth().onAuthStateChanged(async user => {
+            if (!user) {
+              await firebase.auth().signInAnonymously();
+            }
 
-          if (this.props.navigation.state.params.name){
-            this.setUser(user.uid, this.props.navigation.state.params.name);
-          } else {
-            this.setUser(user.uid);
-          }
+            if (this.props.navigation.state.params.name){
+              this.setUser(user.uid, this.props.navigation.state.params.name);
+            } else {
+              this.setUser(user.uid);
+            }
 
-          this.setState({
-            uid: user.uid,
-            loggedInText: 'You are online!'
+            this.setState({
+              uid: user.uid,
+              loggedInText: `You are online ${this.props.navigation.state.params.name}!`
+            });
+
+            this.unsubscribe = this.referenceMessages.orderBy('createdAt', 'desc').onSnapshot(this.onCollectionUpdate);
           });
-
-          this.unsubscribe = this.referenceMessages.orderBy('createdAt', 'desc').onSnapshot(this.onCollectionUpdate);
-        });
+        } catch (err) {
+          console.log(err.message);
+        }
       } else {
         this.setState({
           isConnected: false
@@ -83,6 +89,7 @@ export default class Chat extends Component {
     this.unsubscribe();
   }
 
+  //User will be Anonymous by default unless the User provided his/her name.
   setUser = (_id, name = "Anonymous") => {
     this.setState({
       user: {
@@ -113,7 +120,7 @@ export default class Chat extends Component {
         messages: JSON.parse(messages)
       });
     } catch (err){
-      console.error(err.message);
+      console.log(err.message);
     }
   };
 
@@ -121,7 +128,7 @@ export default class Chat extends Component {
     try {
       await AsyncStorage.setItem('messages', JSON.stringify(this.state.messages));
     } catch (err){
-      console.error(err.message);
+      console.log(err.message);
     }
   };
 
@@ -129,7 +136,7 @@ export default class Chat extends Component {
     try {
       await AsyncStorage.removeItem('messages');
     } catch (err){
-      console.error(err.message);
+      console.log(err.message);
     }
   };
 

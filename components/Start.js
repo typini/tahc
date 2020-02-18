@@ -2,6 +2,12 @@ import KeyboardSpacer from 'react-native-keyboard-spacer';
 import React, { Component } from 'react';
 import { StyleSheet, Text, TextInput, Alert, Button, View, ImageBackground, TouchableOpacity } from 'react-native';
 
+const COLOR1 = "#090C08",
+      COLOR2 = "#474056",
+      COLOR3 = "#8A95A5",
+      COLOR4 = "#B9C6AE",
+      THEMECOLOR = "#757083";
+
 export default class Start extends Component {
   constructor(props){
     super(props);
@@ -35,19 +41,19 @@ export default class Start extends Component {
             <View style={styles.startColors}>
               <TouchableOpacity
                 style={[styles.colorButton, styles.color1]}
-                onPress={() => this.setState({ colorScheme: "#090C08"})}
+                onPress={() => this.setState({ colorScheme: `${COLOR1}`})}
               />
               <TouchableOpacity
                 style={[styles.colorButton, styles.color2]}
-                onPress={() => this.setState({ colorScheme: "#474056"})}
+                onPress={() => this.setState({ colorScheme: `${COLOR2}`})}
               />
               <TouchableOpacity
                 style={[styles.colorButton, styles.color3]}
-                onPress={() => this.setState({ colorScheme: "#8A95A5"})}
+                onPress={() => this.setState({ colorScheme: `${COLOR3}`})}
               />
               <TouchableOpacity
                 style={[styles.colorButton, styles.color4]}
-                onPress={() => this.setState({ colorScheme: "#B9C6AE"})}
+                onPress={() => this.setState({ colorScheme: `${COLOR4}`})}
               />
             </View>
           </View>
@@ -55,7 +61,7 @@ export default class Start extends Component {
           <View style={styles.startRow}>
             {/*Buttons have limited properties in React Native*/}
             <Button
-              color="#757083"
+              color={`${THEMECOLOR}`}
               title="Start Chatting"
               onPress={() => this.props.navigation.navigate('Chat', { name: this.state.name, colorScheme: this.state.colorScheme })}
             />
@@ -101,9 +107,9 @@ const styles = StyleSheet.create({
   startName: {
     fontSize: 16,
     fontWeight: "300",
-    color: "#757083",
+    color: `${THEMECOLOR}`,
     borderWidth: 1.5,
-    borderColor: "#757083",
+    borderColor: `${THEMECOLOR}`,
     width: "100%",
     opacity: .5,
     height: 50,
@@ -113,7 +119,7 @@ const styles = StyleSheet.create({
   chooseColorsText: {
     fontSize: 16,
     fontWeight: "300",
-    color: "#757083",
+    color: `${THEMECOLOR}`,
     opacity: 1
   },
   startColors: {
@@ -129,29 +135,29 @@ const styles = StyleSheet.create({
     borderRadius: 22
   },
   selectedColorButton: {
-    borderColor: "#757083",
+    borderColor: `${THEMECOLOR}`,
     borderWidth: 3,
     height: 50,
     width: 50,
     borderRadius: 25
   },
   color1: {
-    backgroundColor: "#090C08"
+    backgroundColor: `${COLOR1}`
   },
   color2: {
-    backgroundColor: "#474056"
+    backgroundColor: `${COLOR2}`
   },
   color3: {
-    backgroundColor: "#8A95A5"
+    backgroundColor: `${COLOR3}`
   },
   color4: {
-    backgroundColor: "#B9C6AE"
+    backgroundColor: `${COLOR4}`
   },
   startButton: {
     fontSize: 68,
     fontWeight: "600",
     color: "#333",
-    backgroundColor: "#757083",
+    backgroundColor: `${THEMECOLOR}`,
     width: "88%",
     height: 80
   }
